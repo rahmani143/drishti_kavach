@@ -1,0 +1,127 @@
+================================================================================
+  YOLOv8 NANO LICENSE PLATE DETECTION - QUICK START
+================================================================================
+
+STEP 1: INSTALL DEPENDENCIES
+  $ pip install ultralytics pyyaml kaggle torch
+
+STEP 2: CONFIGURE KAGGLE API
+  1. Go to https://www.kaggle.com/settings/account
+  2. Click "Create New API Token" (downloads kaggle.json)
+  3. Move kaggle.json to:
+     - Windows: C:\Users\<YourUsername>\.kaggle\kaggle.json
+     - Linux/Mac: ~/.kaggle/kaggle.json
+
+STEP 3: VERIFY CONFIGURATION (Optional)
+  Open train.py and check these settings:
+  
+  DATASET_DIR = os.path.abspath("IDDDetectionsYOLODataset")
+  EPOCHS = 10           # Epochs (increase for better accuracy)
+  BATCH_SIZE = 8        # Batch size (reduce to 4 if OOM)
+  IMG_SIZE = 640        # Image size (leave as is)
+  DEVICE = "cpu"        # Device (leave as "cpu" for Pi)
+
+STEP 4: RUN TRAINING
+  $ python train.py
+
+STEP 5: FIND YOUR TRAINED MODEL
+  Location: runs/detect/license_plate_detection/weights/best.pt
+  (Printed at end of training)
+
+================================================================================
+WHAT THE SCRIPT DOES AUTOMATICALLY
+================================================================================
+
+✓ Checks if dataset exists locally
+✓ Downloads from Kaggle if missing (requires kaggle.json)
+✓ Extracts ZIP files
+✓ Validates dataset structure
+✓ Updates data.yaml with absolute paths
+✓ Trains YOLOv8 nano model on CPU
+✓ Saves best weights to runs/detect/license_plate_detection/weights/best.pt
+
+================================================================================
+TRAINING PARAMETERS
+================================================================================
+
+EPOCHS = 10
+  - Default: 10 passes through the entire dataset
+  - Increase to 20-30 for higher accuracy (takes longer)
+  - Decrease to 5 for quick testing
+
+BATCH_SIZE = 8
+  - Number of images per training batch
+  - Reduce to 4 if you see "CUDA out of memory" errors
+  - Increase to 16 only if you have plenty of RAM
+
+IMG_SIZE = 640
+  - Input image resolution (standard for YOLOv8)
+  - Leave as is for compatibility
+
+DEVICE = "cpu"
+  - MUST be "cpu" for Raspberry Pi compatibility
+  - Do NOT change to "cuda"
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Q: "kaggle library not found"
+A: pip install kaggle
+
+Q: "Failed to download dataset"
+A: 
+  1. Verify kaggle.json exists at ~/.kaggle/kaggle.json (Linux/Mac)
+     or C:\Users\<username>\.kaggle\kaggle.json (Windows)
+  2. Test with: kaggle datasets list
+
+Q: Memory/OOM errors
+A: Reduce BATCH_SIZE from 8 to 4
+
+Q: Training is very slow
+A: Expected on CPU! 10 epochs on 30k+ images = 12-24 hours typical
+   Reduce EPOCHS to 5 for quick testing
+
+Q: Cannot find best.pt after training
+A: Check the final output message - it shows the exact path
+   Or look in: runs/detect/license_plate_detection/weights/best.pt
+
+================================================================================
+USING THE TRAINED MODEL
+================================================================================
+
+Python Inference:
+  from ultralytics import YOLO
+  model = YOLO('runs/detect/license_plate_detection/weights/best.pt')
+  results = model.predict(source='image.jpg')
+
+Copy to Raspberry Pi:
+  scp runs/detect/license_plate_detection/weights/best.pt pi@raspberrypi.local:/home/pi/
+
+================================================================================
+DATASET INFO
+================================================================================
+
+Source: https://www.kaggle.com/datasets/redzapdos123/indian-driving-dataset-detections-yolov11
+
+Structure After Download:
+  IDDDetectionsYOLODataset/
+  ├── train/images/    (33,569 images)
+  ├── train/labels/    (33,569 labels)
+  ├── val/images/      (4,196 images)
+  ├── val/labels/      (4,196 labels)
+  ├── test/images/     (4,197 images)
+  ├── test/labels/     (4,197 labels)
+  └── data.yaml        (auto-updated with absolute paths)
+
+================================================================================
+DOCUMENTATION
+================================================================================
+
+See TRAINING_GUIDE.md for detailed information and examples.
+
+YOLOv8 Official Docs: https://docs.ultralytics.com/
+Kaggle API: https://www.kaggle.com/settings/account
+Raspberry Pi Deployment: https://docs.ultralytics.com/guides/raspberry-pi/
+
+================================================================================
