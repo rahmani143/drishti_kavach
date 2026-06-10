@@ -24,14 +24,16 @@ face_cascade = cv2.CascadeClassifier(cascade_path)
 
 # ... keep your get_identity_vector function the same below this ...
 
-def get_identity_vector(image_path):
-    """
-    Takes an image file path, extracts the face, and returns a 512-dimensional vector.
-    Returns None if no image is found at the path.
-    """
-    img = cv2.imread(image_path)
+def get_identity_vector(image_input):
+    # Check if the input is a string (file path) or a NumPy array (video frame)
+    if isinstance(image_input, str):
+        img = cv2.imread(image_input)
+    else:
+        # It's already a numpy array/frame from the video pipeline, use it directly
+        img = image_input
+
     if img is None:
-        print(f"Error: Could not read image at {image_path}")
+        print("Error: Image frame could not be loaded.")
         return None
         
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -64,7 +66,7 @@ def get_identity_vector(image_path):
     
     return final_vector
 
-DB_PATH = "face_database.npz"
+DB_PATH = r"C:\Users\bss10\Desktop\drishti\drishti_kavach\face_recognition\face_database.npz"
 SECURITY_THRESHOLD = 0.65  # Minimum cosine similarity to confirm a match
 
 def build_database(targets_dir="targets"):
@@ -104,11 +106,14 @@ def build_database(targets_dir="targets"):
 def identify_face(image_path):
     """
     Compares a target face against the database. 
-    Returns the name if a match is found above the threshold, otherwise returns None.
+    Returns:
+        - matched_name (str or None): The name if above SECURITY_THRESHOLD, else None.
+        - max_similarity (float): The actual calculated similarity score.
+        - best_match (str): The name of the closest person found in the database.
     """
     if not os.path.exists(DB_PATH):
         print("Error: Database file not found. Run build_database() first.")
-        return None
+        return None, 0.0, "Unknown"
         
     # Load the database
     with np.load(DB_PATH) as data:
@@ -117,9 +122,9 @@ def identify_face(image_path):
     test_vector = get_identity_vector(image_path)
     if test_vector is None:
         print("Could not process the query image.")
-        return None
+        return None, 0.0, "Unknown"
         
-    best_match = None
+    best_match = "Unknown"
     max_similarity = -1.0
     
     # Linear scan matching
@@ -129,13 +134,57 @@ def identify_face(image_path):
             max_similarity = similarity
             best_match = identity_name
             
-    # Apply open-set threshold check
+    # Apply open-set threshold check for terminal logs
     if max_similarity >= SECURITY_THRESHOLD:
         print(f"[MATCH FOUND] Identity: {best_match} | Confidence: {max_similarity:.4f}")
-        return best_match
+        return best_match, float(max_similarity), best_match
     else:
-        print(f"[UNKNOWN] Identity not recognized. Highest similarity: {max_similarity:.4f} with {best_match}")
-        return None
+        # print(f"[UNKNOWN] Identity not recognized. Highest similarity: {max_similarity:.4f} with {best_match}")
+        # Return None for strict match, but still return the similarity and best match name
+        return None, float(max_similarity), best_match
+
+def append_single_person_to_database(person_name, person_folder_path):
+    """
+    Appends a single new person to the existing face_database.npz 
+    without re-processing the entire dataset.
+    """
+    # 1. Load the existing database dictionary into memory
+    if os.path.exists(DB_PATH):
+        print(f"Loading existing database from {DB_PATH}...")
+        with np.load(DB_PATH) as data:
+            database = {key: data[key] for key in data.files}
+    else:
+        print("Database file does not exist yet. Creating a new one.")
+        database = {}
+
+    # 2. Process only the images inside the new person's folder
+    if not os.path.exists(person_folder_path):
+        print(f"Error: Folder path {person_folder_path} does not exist.")
+        return False
+
+    vectors = []
+    print(f"Generating identity vector for: {person_name}...")
+    for img_name in os.listdir(person_folder_path):
+        img_path = os.path.join(person_folder_path, img_name)
+        vector = get_identity_vector(img_path)
+        if vector is not None:
+            vectors.append(vector)
+
+    if not vectors:
+        print(f"Error: Could not extract any valid face vectors for {person_name}.")
+        return False
+
+    # 3. Calculate mean vector and normalize
+    mean_vector = np.mean(vectors, axis=0)
+    normalized_vector = mean_vector / np.linalg.norm(mean_vector)
+
+    # 4. Add or update the dictionary entry
+    database[person_name] = normalized_vector
+
+    # 5. Save the updated dictionary back to the same NPZ file path
+    np.savez(DB_PATH, **database)
+    print(f"[SUCCESS] {person_name} has been added directly to the database file.")
+    return True
 
 if __name__ == "__main__":
     # Define the absolute path to your Indian actors dataset

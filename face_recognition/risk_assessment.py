@@ -6,8 +6,8 @@ from sklearn.model_selection import train_test_split
 import joblib
 
 # File paths for saving data and the trained model
-CSV_PATH = "criminal_records.csv"
-MODEL_PATH = "random_forest_risk_model.pkl"
+CSV_PATH = r"C:\Users\bss10\Desktop\drishti\drishti_kavach\face_recognition\criminal_records.csv"
+MODEL_PATH = r"C:\Users\bss10\Desktop\drishti\drishti_kavach\face_recognition\random_forest_risk_model.pkl"
 
 def generate_mock_tabular_data(database_npz_path="face_database.npz"):
     """
