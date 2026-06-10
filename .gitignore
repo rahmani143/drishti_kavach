@@ -1,0 +1,32 @@
+archive/
+archive.zip
+runs/
+__pycache__/
+drishti_kavach_env/
+face_recognition/dataset/
+ocr_detection/datasets/*
+!ocr_detection/datasets/dataset_splitter.py
+ocr_detection/number_plate_pic/number_plates_pics/
+ocr_detection/number_plate_pic/car images/
+
+# Virtual environment
+drishti_kavach_env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Large data and archive files
+*.zip
+*.npz
+*.pt
+*.onnx
+*.pkl
+
+# Local datasets or run outputs
+ocr_detection/runs/
+face_recognition/dataset/
+video_input/
+weapon_detection/crime.v10i.yolov8/
+processed_video.mp4/
+15-43-30.mp4/

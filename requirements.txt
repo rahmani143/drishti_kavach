@@ -1,0 +1,16 @@
+PIL
+cv2
+easyocr
+face_recognition
+joblib
+kaggle
+matplotlib
+numpy
+onnxruntime
+pandas
+sklearn
+torch
+torchvision
+ultralytics
+weapon_detection
+yaml
